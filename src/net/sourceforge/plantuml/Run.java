@@ -35,24 +35,6 @@
  */
 package net.sourceforge.plantuml;
 
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
-import java.awt.geom.Rectangle2D;
-import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
-import javax.imageio.ImageIO;
-import javax.swing.UIManager;
-
 import net.sourceforge.plantuml.activitydiagram.ActivityDiagramFactory;
 import net.sourceforge.plantuml.classdiagram.ClassDiagramFactory;
 import net.sourceforge.plantuml.code.Transcoder;
@@ -71,9 +53,25 @@ import net.sourceforge.plantuml.ugraphic.sprite.SpriteGrayLevel;
 import net.sourceforge.plantuml.ugraphic.sprite.SpriteUtils;
 import net.sourceforge.plantuml.version.Version;
 
+import javax.imageio.ImageIO;
+import javax.swing.*;
+import java.awt.*;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class Run {
 
 	public static void main(String[] argsArray) throws IOException, InterruptedException {
+		Timer timer = new Timer();
+		timer.start("1 options");
 		final long start = System.currentTimeMillis();
 		saveCommandLine(argsArray);
 		final Option option = new Option(argsArray);
@@ -118,7 +116,12 @@ public class Run {
 			return;
 		}
 
+		timer.end();
+		timer.start("2 force open jdk");
 		forceOpenJdkResourceLoad();
+		timer.end();
+
+		timer.start("3 do running");
 		boolean error = false;
 		boolean forceQuit = false;
 		if (option.isPattern()) {
@@ -169,6 +172,8 @@ public class Run {
 			Log.error("Duration = " + duration + " seconds");
 		}
 
+		timer.end();
+
 		if (error) {
 			Log.error("Some diagram description contains errors");
 			System.exit(1);
@@ -195,12 +200,23 @@ public class Run {
 	}
 
 	public static void forceOpenJdkResourceLoad() {
+		Timer timer = new Timer();
+		timer.start("- 1.1 buff");
 		final BufferedImage imDummy = new BufferedImage(10, 10, BufferedImage.TYPE_INT_RGB);
+		timer.end();
+		timer.start("- 1.2 graphics");
 		final Graphics2D gg = imDummy.createGraphics();
+		timer.end();
+		timer.start("- 1.3 text");
 		final String text = "Alice";
+		timer.start("- 1.4 font");
 		final Font font = new Font("SansSerif", Font.PLAIN, 12);
+		timer.start("- 1.5 fontmet");
 		final FontMetrics fm = gg.getFontMetrics(font);
+		timer.end();
+		timer.start("- 1.6 rect");
 		final Rectangle2D rect = fm.getStringBounds(text, gg);
+		timer.end();
 	}
 
 	private static void encodeSprite(List<String> result) throws IOException {
